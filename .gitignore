@@ -8,6 +8,7 @@ __pycache__/
 venv/
 env/
 .env
+.env.example
 
 # Banco de dados e dumps (mantendo sigilo dos dados dos usuários)
 *.sqlite3
