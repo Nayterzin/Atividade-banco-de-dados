@@ -39,7 +39,7 @@ def cadastro_c(request):
         
     return render(request, 'cadastro_cliente.html')
 
-def login(request):
+def login_cliente(request):
     if request.method == "POST":
         usuario = request.POST.get('usuario')
         senha = request.POST.get('senha')
@@ -391,3 +391,68 @@ def remover_procedimento(request):
         Procedimento.objects.filter(idprocedimento=idprocedimento).delete()
         messages.success(request, "Procedimento removido com sucesso!")
     return redirect('home')
+
+#login de funcionarios, onde haverá uma validação para diferenciar os tipos de funcionarios
+
+def login_funcionario(request):
+    if request.method == "POST":
+        cpf = request.POST.get('cpf')
+        senha = request.POST.get('senha')
+        usuario = User.objects.filter(username=cpf).first()
+        if not usuario:
+            messages.error(request, "Usuário não encontrado.")
+            return render(request, 'login_funcionario.html')
+        if not usuario.check_password(senha):
+            messages.error(request, "Senha incorreta.")
+            return render(request, 'login_funcionario.html')
+        if not usuario.is_staff:
+            messages.error(request, "Este usuário não é um funcionário.")
+            return render(request, 'login_funcionario.html')
+        auth_login(request, usuario)
+        messages.success(request, "Login realizado com sucesso!")
+        if usuario.is_superuser:
+            return redirect('home')
+        else:
+            return redirect('home')
+    return render(request, 'login_funcionario.html')
+
+def cadastro_funcionario(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para fazer inserção de funcionário.")
+        return redirect('home')
+    if request.method == "POST":
+        nome = request.POST.get('nome')
+        cpf = request.POST.get('cpf')
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
+        tipo = request.POST.get('tipo')
+        data_nascimento = request.POST.get('data_nascimento')
+        endereco = request.POST.get('endereco')
+
+        if User.objects.filter(username=cpf).exists():
+            messages.error(request, "CPF já cadastrado.")
+            return render(request, 'cadastro_funcionario.html')
+
+        novo_user = User.objects.create_user(
+            username=cpf,
+            password=senha,
+            email=email,
+            first_name=nome,
+            is_staff=True,
+            is_superuser=(tipo == 'gerente')
+        )
+
+        Funcionario.objects.create(
+            nome=nome,
+            data_nascimento=data_nascimento,
+            endereco=endereco,
+            tipo=tipo
+        )
+
+        messages.success(request, "Funcionário cadastrado com sucesso!")
+        return redirect('home')
+    return render(request, 'cadastro_funcionario.html')
+
+

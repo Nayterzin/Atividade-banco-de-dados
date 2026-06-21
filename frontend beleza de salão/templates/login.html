@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar — Beleza de Salão</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+
+
+    <div class="logo-space">
+      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+    </div>
+
+
+    <h1 class="auth-title">Bem-vindo</h1>
+    <p class="auth-subtitle">Acesse sua conta para gerenciar seus agendamentos.</p>
+
+
+    {% if messages %}
+      <ul class="messages-list" aria-live="polite">
+        {% for message in messages %}
+          <li class="message-item {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+
+    <form method="POST" action="{% url 'login' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="usuario">CPF ou Usuário</label>
+        <input
+          type="text"
+          id="usuario"
+          name="usuario"
+          placeholder="000.000.000-00"
+          autocomplete="username"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input
+          type="password"
+          id="senha"
+          name="senha"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+
+      <button type="submit" class="btn btn-primary" name="tipo" value="cliente">
+        Entrar como Cliente
+      </button>
+
+    </form>
+
+
+    <nav class="auth-links" aria-label="Links auxiliares">
+      <a href="#">Esqueci minha senha</a>
+      <span class="divider" aria-hidden="true">·</span>
+      <a href="{% url 'cadastro_c' %}">Criar conta</a>
+    </nav>
+
+  </div>
+
+  <script src="{% static 'script.js' %}"></script>
+</body>
+</html>

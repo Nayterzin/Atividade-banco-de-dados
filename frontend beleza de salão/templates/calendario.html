@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendário — Beleza de Salão</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+</head>
+<body>
+
+<div class="dashboard">
+
+
+  <aside class="sidebar" aria-label="Menu principal">
+
+    <div class="logo-space">
+      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+    </div>
+
+
+    <nav aria-label="Navegação do salão">
+      <p class="sidebar-label">Menu</p>
+      <ul>
+        <li>
+          <a href="{% url 'calendario' %}" class="active" aria-current="page">
+            <span class="nav-icon" aria-hidden="true"></span>
+            Calendário
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'meus_agendamentos' %}">
+            <span class="nav-icon" aria-hidden="true">
+            </span>
+            Meus Agendamentos
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'perfil' %}">
+            <span class="nav-icon" aria-hidden="true"></span>
+            Meu Perfil
+          </a>
+        </li>
+      </ul>
+
+      {% if user.is_staff %}
+
+        <p class="sidebar-label">Gerência</p>
+        <ul>
+          <li>
+            <a href="{% url 'agenda_do_dia' %}">
+              <span class="nav-icon" aria-hidden="true"></span>
+              Agenda do Dia
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'total_agendamentos' %}">
+              <span class="nav-icon" aria-hidden="true"></span>
+              Totais
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'adicionar_novo_procedimento' %}">
+              <span class="nav-icon" aria-hidden="true"></span>
+              Procedimentos
+            </a>
+          </li>
+        </ul>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{% url 'login' %}" aria-label="Sair da conta">
+        <span class="nav-icon" aria-hidden="true"></span>
+        Sair
+      </a>
+    </div>
+
+  </aside>
+
+
+  <main class="content-area" id="main-content">
+
+    <header class="section-header">
+      <h1>Agendar Horário</h1>
+      <p>Selecione o dia e o horário desejado para o seu serviço.</p>
+    </header>
+
+    {% if messages %}
+      <ul class="messages-list" aria-live="polite">
+        {% for message in messages %}
+          <li class="message-item {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <input type="hidden" id="hidden-date" name="data" value="{{ data|date:'Y-m-d' }}" />
+
+    <section aria-label="Selecionar dia da semana">
+      <div id="week-grid" class="week-grid" role="group" aria-label="Dias úteis da semana">
+
+      </div>
+
+      <p id="selected-day-title" class="selected-day-title" aria-live="polite">
+
+      </p>
+    </section>
+
+    <section aria-label="Horários disponíveis">
+      <div class="schedule-grid">
+
+        {% with horarios="08:00,09:00,10:00,11:00,12:00,13:00,14:00,15:00,16:00" %}
+          {% for h in horarios.split %}
+            <div class="time-slot">
+              <span class="time-label" aria-hidden="true">{{ h }}</span>
+              <button
+                type="button"
+                class="btn"
+                onclick="abrirModal('{{ h }}')"
+                aria-label="Agendar às {{ h }}"
+              >
+                Agendar
+              </button>
+            </div>
+          {% endfor %}
+        {% endwith %}
+
+        
+      </div>
+    </section>
+
+
+
+  </main>
+
+</div>
+<div
+  id="modal-agendamento"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-titulo"
+  aria-describedby="modal-horario"
+>
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-titulo">Confirmar Agendamento</h2>
+      <button
+        type="button"
+        class="modal-close"
+        onclick="fecharModal()"
+        aria-label="Fechar modal"
+      >✕</button>
+    </div>
+
+    <div class="modal-info" role="status">
+      <strong>Horário selecionado:</strong>
+      <span id="modal-horario">—</span>
+    </div>
+
+    <form method="POST" action="{% url 'realizar_agendamento' %}">
+      {% csrf_token %}
+
+      
+      <input type="hidden" id="modal-input-data-hora" name="data_hora" value="" />
+      <input type="hidden" id="modal-input-hora"      name="_hora"     value="" />
+      <input type="hidden" id="modal-input-data"      name="_data"     value="" />
+
+
+      <input type="hidden" name="cliente" value="{{ request.user.username }}" />
+
+      <div class="form-group">
+        <label for="procedimento">Procedimento</label>
+        <select id="procedimento" name="procedimento" required>
+          <option value="" disabled selected>Selecione um serviço…</option>
+          {% for proc in procedimentos %}
+            <option value="{{ proc.idprocedimento }}">
+              {{ proc.nome }} — R$ {{ proc.preco }}
+            </option>
+          {% empty %}
+            <option disabled>Nenhum procedimento cadastrado.</option>
+          {% endfor %}
+        </select>
+      </div>
+
+
+      <div class="form-group">
+        <label for="funcionario">Profissional</label>
+        <select id="funcionario" name="funcionario" required>
+          <option value="" disabled selected>Selecione uma profissional…</option>
+          {% for fun in funcionarios %}
+            <option value="{{ fun.idfun }}">
+              {{ fun.nome }} — {{ fun.get_tipo_display }}
+            </option>
+          {% empty %}
+            <option disabled>Nenhuma profissional disponível.</option>
+          {% endfor %}
+        </select>
+      </div>
+
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="fecharModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Confirmar
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script src="{% static 'script.js' %}"></script>
+</body>
+</html>
