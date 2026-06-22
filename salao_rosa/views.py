@@ -1,18 +1,56 @@
-from django.shortcuts import render, redirect
+# salao_rosa/views.py
+from django.core.exceptions import ValidationError
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
-from .models import (
-    Funcionario, EspecializacaoCabeleireira, EspecializacaoManicure,
-    EspecializacaoMaquiadora, TipoFuncionario, Cliente, StatusAgendamento,
-    Agenda, Procedimento
-)
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from datetime import date, datetime
+from .models import (
+    Funcionario, Cliente, Agenda, Procedimento,
+    StatusAgendamento, TipoFuncionario
+)
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Procedimento, Funcionario
+import json
 
-# Funcionalidade cadastro de cliente
+@login_required
+def calendario(request):
+    procedimentos = Procedimento.objects.all()
+    funcionarios = Funcionario.objects.all()
+    procedimentos_list = []
+    for proc in procedimentos:
+        tipos = []
+        if proc.nome == 'Corte de cabelo':
+            tipos.append('cabeleireira')
+        elif proc.nome == 'Manicure':
+            tipos.append('manicure')
+        elif proc.nome == 'Maquiagem social':
+            tipos.append('maquiadora')
+        elif proc.nome == 'Penteado':
+            tipos.extend(['cabeleireira', 'manicure'])
+        elif proc.nome == 'Depilação':
+            tipos.extend(['manicure', 'cabeleireira'])
+        procedimentos_list.append({
+            'id': proc.idprocedimento,
+            'nome': proc.nome,
+            'tipos': tipos
+        })
+    funcionarios_list = [
+        {'id': fun.idfun, 'nome': fun.nome, 'tipo': fun.tipo}
+        for fun in funcionarios
+    ]
+    context = {
+        'procedimentos_json': json.dumps(procedimentos_list),
+        'funcionarios_json': json.dumps(funcionarios_list),
+    }
+    return render(request, 'calendario.html', context)
+
 def cadastro_c(request):
     if request.method == 'POST':
-        nome_cliente = request.POST.get('nome')
+        nome = request.POST.get('nome')
         cpf = request.POST.get('cpf')
         email = request.POST.get('email')
         telefone = request.POST.get('telefone')
@@ -22,407 +60,210 @@ def cadastro_c(request):
         if senha != confirmar:
             messages.error(request, "As senhas não conferem.")
             return render(request, 'cadastro_cliente.html')
-        
+
         if Cliente.objects.filter(cpf=cpf).exists():
             messages.error(request, "CPF já cadastrado.")
             return render(request, 'cadastro_cliente.html')
-            
+
         if User.objects.filter(username=cpf).exists():
             messages.error(request, "Usuário já cadastrado.")
             return render(request, 'cadastro_cliente.html')
-        
-        User.objects.create_user(username=cpf, password=senha, email=email, first_name=nome_cliente)
-        Cliente.objects.create(cpf=cpf, nome=nome_cliente, email=email, telefone=telefone)
-        
+
+        user = User.objects.create_user(username=cpf, password=senha, email=email, first_name=nome)
+        Cliente.objects.create(cpf=cpf, nome=nome, email=email, telefone=telefone)
         messages.success(request, "Cliente cadastrado com sucesso!")
         return redirect('login')
-        
+
     return render(request, 'cadastro_cliente.html')
 
 def login_cliente(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         usuario = request.POST.get('usuario')
         senha = request.POST.get('senha')
-
         user = authenticate(request, username=usuario, password=senha)
-
         if user is not None:
             auth_login(request, user)
-            return redirect('home')
+            return redirect('calendario')
         else:
-            messages.error(request, "Usuario ou senha invalidos.")
+            messages.error(request, "Usuário ou senha inválidos.")
             return redirect('login')
     return render(request, 'login.html')
-
-def realizar_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if request.method == "POST":
-        data_hora = request.POST.get('data_hora')
-        procedimento = request.POST.get('procedimento')
-        funcionario = request.POST.get('funcionario')
-        cliente = request.POST.get('cliente')
-        status = StatusAgendamento.AGENDADO
-
-        Agenda.objects.create(
-            data_hora=data_hora,
-            procedimento_id=procedimento,
-            funcionario_id=funcionario, 
-            cliente_id=cliente,
-            status=status
-        )
-
-        messages.success(request, "Agendamento realizado com sucesso!")
-        return redirect('home')
-        
-    funcionarios = Funcionario.objects.all()
-    procedimentos = Procedimento.objects.all()
-    clientes = Cliente.objects.all()
-    return render(request, 'realizar_agendamento.html', {
-        'funcionarios': funcionarios,
-        'procedimentos': procedimentos,
-        'clientes': clientes
-    })
-
-# Mostrar agendamentos do dia
-def agenda_do_dia(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data)
-    return render(request, 'agenda_do_dia.html', {'agenda': agenda, 'data': data})
-
-# Calendário para selecionar dia
-def calendario(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data)
-    return render(request, 'calendario.html', {'agenda': agenda, 'data': data})   
-
-# Editar agendamento existente
-def editar_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')    
-    
-    if request.method == "POST":
-        idagenda = request.POST.get('idagenda')
-        agenda = Agenda.objects.filter(idagenda=idagenda).first()
-        if not agenda:
-            messages.error(request, "Agendamento não encontrado.")
-            return redirect('home')
-            
-        cliente_obj = Cliente.objects.filter(cpf=request.user.username).first()
-        is_funcionario = request.user.is_staff
-        is_dono = cliente_obj and agenda.cliente == cliente_obj
-        
-        if not (is_funcionario or is_dono):
-            messages.error(request, "Você não tem permissão para editar este agendamento.")
-            return redirect('home')
-
-        data_hora = request.POST.get('data_hora')
-        procedimento = request.POST.get('procedimento')
-        funcionario = request.POST.get('funcionario')
-        cliente = request.POST.get('cliente')
-        status = request.POST.get('status')
-
-        update_fields = {}
-        if data_hora:
-            update_fields['data_hora'] = data_hora
-        if procedimento:
-            update_fields['procedimento_id'] = procedimento
-        if funcionario:
-            update_fields['funcionario_id'] = funcionario
-        if cliente:
-            update_fields['cliente_id'] = cliente
-        if status:
-            update_fields['status'] = status
-
-        if update_fields:
-            Agenda.objects.filter(idagenda=idagenda).update(**update_fields)
-            messages.success(request, "Agendamento editado com sucesso!")
-        return redirect('home')
-        
-    # GET request
-    idagenda = request.GET.get('idagenda')
-    agenda = Agenda.objects.filter(idagenda=idagenda).first()
-    if not agenda:
-        messages.error(request, "Agendamento não encontrado.")
-        return redirect('home')
-        
-    cliente_obj = Cliente.objects.filter(cpf=request.user.username).first()
-    if not (request.user.is_staff or (cliente_obj and agenda.cliente == cliente_obj)):
-        messages.error(request, "Você não tem permissão para editar este agendamento.")
-        return redirect('home')
-        
-    funcionarios = Funcionario.objects.all()
-    procedimentos = Procedimento.objects.all()
-    clientes = Cliente.objects.all()
-    return render(request, 'editar_agendamento.html', {
-        'agenda': agenda,
-        'funcionarios': funcionarios,
-        'procedimentos': procedimentos,
-        'clientes': clientes
-    })
-
-# Remover agendamento
-def remover_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')    
-        
-    if request.method == "POST":
-        idagenda = request.POST.get('idagenda')
-        agenda = Agenda.objects.filter(idagenda=idagenda).first()
-        if not agenda:
-            messages.error(request, "Agendamento não encontrado.")
-            return redirect('home')
-            
-        cliente_obj = Cliente.objects.filter(cpf=request.user.username).first()
-        is_funcionario = request.user.is_staff
-        is_dono = cliente_obj and agenda.cliente == cliente_obj
-        
-        if is_funcionario or is_dono:
-            agenda.delete()
-            messages.success(request, "Agendamento removido com sucesso!")
-        else:
-            messages.error(request, "Você não tem permissão para remover este agendamento.")
-    return redirect('home')
-
-# Total de agendamentos do dia
-def total_agendamentos(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data)
-    total = agenda.count()
-    return render(request, 'total_agendamentos.html', {'agenda': agenda, 'total': total, 'data': data})
-
-def agendamentos_pendentes(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data, status='agendado')
-    return render(request, 'agendamentos_pendentes.html', {'agenda': agenda, 'data': data})
-    
-def agendamentos_confirmados(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data, status='confirmado')
-    return render(request, 'agendamentos_confirmados.html', {'agenda': agenda, 'data': data})
-    
-def agendamentos_concluidos(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        except ValueError:
-            data = date.today()
-    else:
-        data = date.today()
-        
-    agenda = Agenda.objects.filter(data_hora__date=data, status='concluido')
-    return render(request, 'agendamentos_concluidos.html', {'agenda': agenda, 'data': data})
-
-# Confirmar agendamento pelo funcionário
-def confirmar_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if not request.user.is_staff:
-        messages.error(request, "Você não tem permissão para confirmar este agendamento.")
-        return redirect('home')
-        
-    if request.method == 'POST':
-        idagenda = request.POST.get('idagenda')
-        Agenda.objects.filter(idagenda=idagenda).update(status='confirmado')
-        messages.success(request, "Agendamento confirmado com sucesso!")
-    return redirect('home')
-
-# Cancelar agendamento pelo funcionário
-def cancelar_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if not request.user.is_staff:
-        messages.error(request, "Você não tem permissão para cancelar este agendamento.")
-        return redirect('home')
-        
-    if request.method == 'POST':
-        idagenda = request.POST.get('idagenda')
-        Agenda.objects.filter(idagenda=idagenda).update(status='cancelado')
-        messages.success(request, "Agendamento cancelado com sucesso!")
-    return redirect('home')
-
-# Concluir agendamento já confirmado pelo funcionário
-def concluir_agendamento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if not request.user.is_staff:
-        messages.error(request, "Você não tem permissão para concluir este agendamento.")
-        return redirect('home')
-        
-    if request.method == 'POST':
-        idagenda = request.POST.get('idagenda')
-        Agenda.objects.filter(idagenda=idagenda).update(status='concluido')
-        messages.success(request, "Agendamento concluído com sucesso!")
-    return redirect('home')
-
-# Visualizar agendamentos passados e atuais do cliente
-def meus_agendamentos(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    cliente = Cliente.objects.filter(cpf=request.user.username).first()
-    if not cliente:
-        messages.error(request, "Cliente não encontrado.")
-        return redirect('home')
-        
-    data_str = request.GET.get('data')
-    if data_str:
-        try:
-            data = datetime.strptime(data_str, "%Y-%m-%d").date()
-            agenda = Agenda.objects.filter(data_hora__date=data, cliente=cliente).order_by('-data_hora')
-        except ValueError:
-            agenda = Agenda.objects.filter(cliente=cliente).order_by('-data_hora')
-    else:
-        agenda = Agenda.objects.filter(cliente=cliente).order_by('-data_hora')
-        
-    return render(request, 'meus_agendamentos.html', {'agenda': agenda})
-
-# Preço a ser pago no final daquele agendamento
-def preco_procedimento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    cliente = Cliente.objects.filter(cpf=request.user.username).first()
-    if not cliente:
-        messages.error(request, "Cliente não encontrado.")
-        return redirect('home')
-        
-    idagenda = request.GET.get('idagenda')
-    try:
-        agenda = Agenda.objects.get(idagenda=idagenda, status='concluido', cliente=cliente)
-        preco_total = agenda.procedimento.preco
-    except Agenda.DoesNotExist:
-        messages.error(request, "Agendamento concluído não encontrado.")
-        return redirect('home')
-        
-    return render(request, 'preco_total_procedimento.html', {'preco_total': preco_total, 'agenda': agenda})
-    
-def adicionar_novo_procedimento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if not request.user.is_staff:
-        messages.error(request, "Você não tem permissão para adicionar procedimentos.")
-        return redirect('home')
-        
-    if request.method == 'POST':
-        nome = request.POST.get('nome')
-        preco = request.POST.get('preco')
-        duracao = request.POST.get('duracao')
-        Procedimento.objects.create(nome=nome, preco=preco, duracao=duracao)
-        messages.success(request, "Procedimento adicionado com sucesso!")
-        return redirect('home')
-        
-    return render(request, 'adicionar_procedimento.html')
-
-def remover_procedimento(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-        
-    if not request.user.is_staff:
-        messages.error(request, "Você não tem permissão para remover procedimentos.")
-        return redirect('home')
-        
-    if request.method == 'POST':
-        idprocedimento = request.POST.get('idprocedimento')
-        Procedimento.objects.filter(idprocedimento=idprocedimento).delete()
-        messages.success(request, "Procedimento removido com sucesso!")
-    return redirect('home')
-
-#login de funcionarios, onde haverá uma validação para diferenciar os tipos de funcionarios
 
 def login_funcionario(request):
     if request.method == "POST":
         cpf = request.POST.get('cpf')
         senha = request.POST.get('senha')
-        usuario = User.objects.filter(username=cpf).first()
-        if not usuario:
+        user = authenticate(request, username=cpf, password=senha)
+        if user is None:
             messages.error(request, "Usuário não encontrado.")
-            return render(request, 'login_funcionario.html')
-        if not usuario.check_password(senha):
-            messages.error(request, "Senha incorreta.")
-            return render(request, 'login_funcionario.html')
-        if not usuario.is_staff:
+            return render(request, 'login_profissional.html')
+        if not user.is_staff:
             messages.error(request, "Este usuário não é um funcionário.")
-            return render(request, 'login_funcionario.html')
-        auth_login(request, usuario)
+            return render(request, 'login_profissional.html')
+        auth_login(request, user)
         messages.success(request, "Login realizado com sucesso!")
-        if usuario.is_superuser:
-            return redirect('home')
+        return redirect('home_profissional')
+    return render(request, 'login_profissional.html')
+
+
+
+@login_required
+def realizar_agendamento(request):
+    if request.method == 'POST':
+        data_hora = request.POST.get('data_hora')
+        idprocedimento = request.POST.get('procedimento')
+        idfuncionario = request.POST.get('funcionario')
+        cliente_cpf = request.POST.get('cliente')
+
+        cliente = get_object_or_404(Cliente, cpf=cliente_cpf)
+        try:
+            agenda = Agenda(
+                data_hora=data_hora,
+                procedimento_id=idprocedimento,
+                funcionario_id=idfuncionario,
+                cliente=cliente,
+                status=StatusAgendamento.AGENDADO
+            )
+            agenda.save()
+            messages.success(request, "Agendamento realizado com sucesso!")
+        except ValidationError as e:
+            for msg in e.messages:
+                messages.error(request, msg)
+        except IntegrityError:
+            messages.error(request, "Horário já ocupado para este profissional.")
+        return redirect('meus_agendamentos')
+
+    procedimentos = Procedimento.objects.all()
+    funcionarios = Funcionario.objects.all()
+    return render(request, 'calendario.html', {
+        'procedimentos': procedimentos,
+        'funcionarios': funcionarios
+    })
+
+@login_required
+def meus_agendamentos(request):
+    cliente = get_object_or_404(Cliente, cpf=request.user.username)
+    agenda = Agenda.objects.filter(cliente=cliente).order_by('-data_hora')
+    return render(request, 'meus_agendamentos.html', {'agenda': agenda})
+
+@login_required
+def cancelar_agendamento(request):
+    if request.method == 'POST':
+        idagenda = request.POST.get('idagenda')
+        agenda = get_object_or_404(Agenda, idagenda=idagenda)
+        cliente = Cliente.objects.filter(cpf=request.user.username).first()
+        if request.user.is_staff or (cliente and agenda.cliente == cliente):
+            if agenda.status in [StatusAgendamento.AGENDADO, StatusAgendamento.CONFIRMADO]:
+                agenda.status = StatusAgendamento.CANCELADO
+                agenda.save()
+                messages.success(request, "Agendamento cancelado.")
+            else:
+                messages.error(request, "Este agendamento não pode ser cancelado.")
         else:
-            return redirect('home')
-    return render(request, 'login_funcionario.html')
+            messages.error(request, "Sem permissão.")
+    return redirect('meus_agendamentos')
+
+@login_required
+def editar_perfil(request):
+    if request.method == 'POST':
+        campo = request.POST.get('campo')
+        valor = request.POST.get('valor')
+        cliente = get_object_or_404(Cliente, cpf=request.user.username)
+        if campo == 'email':
+            cliente.email = valor
+            request.user.email = valor
+            request.user.save()
+        elif campo == 'telefone':
+            cliente.telefone = valor
+        cliente.save()
+        messages.success(request, "Perfil atualizado.")
+        return redirect('perfil')
+    return render(request, 'perfil.html')
+
+@login_required
+def perfil(request):
+    cliente = Cliente.objects.filter(cpf=request.user.username).first()
+    return render(request, 'perfil.html', {'cliente': cliente})
+
+@login_required
+def home_profissional(request):
+    funcionario = Funcionario.objects.filter(user=request.user).first()
+    if not funcionario:
+        messages.error(request, "Profissional não encontrado.")
+        return redirect('login')
+    hoje = date.today()
+    agendamentos_hoje = Agenda.objects.filter(funcionario=funcionario, data_hora__date=hoje)
+    totais = {
+        'total': agendamentos_hoje.count(),
+        'pendentes': agendamentos_hoje.filter(status=StatusAgendamento.AGENDADO).count(),
+        'concluidos': agendamentos_hoje.filter(status=StatusAgendamento.CONCLUIDO).count()
+    }
+    pendentes = agendamentos_hoje.filter(status=StatusAgendamento.AGENDADO).order_by('data_hora')
+    return render(request, 'home_profissional.html', {
+        'totais': totais,
+        'agendamentos_pendentes': pendentes
+    })
+
+@login_required
+def historico_profissional(request):
+    funcionario = Funcionario.objects.filter(user=request.user).first()
+    if not funcionario:
+        messages.error(request, "Profissional não encontrado.")
+        return redirect('login')
+    historico = Agenda.objects.filter(funcionario=funcionario, status=StatusAgendamento.CONCLUIDO).order_by('-data_hora')
+    return render(request, 'historico_profissional.html', {'historico': historico})
+
+@login_required
+def concluir_agendamento(request):
+    if not request.user.is_staff:
+        messages.error(request, "Permissão negada.")
+        return redirect('home_profissional')
+    if request.method == 'POST':
+        idagenda = request.POST.get('idagenda')
+        agenda = get_object_or_404(Agenda, idagenda=idagenda)
+        if agenda.status == StatusAgendamento.AGENDADO:
+            agenda.status = StatusAgendamento.CONCLUIDO
+            agenda.save()
+            messages.success(request, "Atendimento concluído.")
+        else:
+            messages.error(request, "Status inválido para conclusão.")
+    return redirect('home_profissional')
+
+@login_required
+def editar_perfil_profissional(request):
+    if request.method == 'POST':
+        campo = request.POST.get('campo')
+        valor = request.POST.get('valor')
+        funcionario = get_object_or_404(Funcionario, user=request.user)
+        if campo == 'email':
+            request.user.email = valor
+            request.user.save()
+        elif campo == 'telefone':
+            funcionario.telefone = valor
+        funcionario.save()
+        messages.success(request, "Perfil atualizado.")
+        return redirect('perfil_profissional')
+    return redirect('perfil_profissional')
+
+@login_required
+def perfil_profissional(request):
+    profissional = Funcionario.objects.filter(user=request.user).first()
+    return render(request, 'perfil_profissional.html', {'profissional': profissional})
+
+@login_required
+def preco_procedimento(request):
+    idagenda = request.GET.get('idagenda')
+    agenda = get_object_or_404(Agenda, idagenda=idagenda, status=StatusAgendamento.CONCLUIDO)
+    if agenda.cliente.cpf != request.user.username and not request.user.is_staff:
+        messages.error(request, "Acesso negado.")
+        return redirect('meus_agendamentos')
+    return render(request, 'preco_total_procedimento.html', {'preco_total': agenda.procedimento.preco, 'agenda': agenda})
 
 def cadastro_funcionario(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "Acesso negado.")
         return redirect('login')
-    if not request.user.is_superuser:
-        messages.error(request, "Você não tem permissão para fazer inserção de funcionário.")
-        return redirect('home')
-    if request.method == "POST":
+    if request.method == 'POST':
         nome = request.POST.get('nome')
         cpf = request.POST.get('cpf')
         email = request.POST.get('email')
@@ -430,12 +271,13 @@ def cadastro_funcionario(request):
         tipo = request.POST.get('tipo')
         data_nascimento = request.POST.get('data_nascimento')
         endereco = request.POST.get('endereco')
+        telefone = request.POST.get('telefone')
 
         if User.objects.filter(username=cpf).exists():
             messages.error(request, "CPF já cadastrado.")
             return render(request, 'cadastro_funcionario.html')
 
-        novo_user = User.objects.create_user(
+        user = User.objects.create_user(
             username=cpf,
             password=senha,
             email=email,
@@ -443,16 +285,15 @@ def cadastro_funcionario(request):
             is_staff=True,
             is_superuser=(tipo == 'gerente')
         )
-
-        Funcionario.objects.create(
+        funcionario = Funcionario.objects.create(
             nome=nome,
+            cpf=cpf,
+            telefone=telefone,
             data_nascimento=data_nascimento,
             endereco=endereco,
-            tipo=tipo
+            tipo=tipo,
+            user=user
         )
-
         messages.success(request, "Funcionário cadastrado com sucesso!")
-        return redirect('home')
+        return redirect('home_profissional')
     return render(request, 'cadastro_funcionario.html')
-
-

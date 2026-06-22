@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Início Profissional — Beleza de Salão</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+</head>
+<body>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="logo-space">
+      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+    </div>
+    <nav>
+      <p class="sidebar-label">Navegação</p>
+      <ul>
+        <li><a href="{% url 'home_profissional' %}" class="active">Início</a></li>
+        <li><a href="{% url 'historico_profissional' %}">Histórico</a></li>
+        <li><a href="{% url 'perfil_profissional' %}">Meu Perfil</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'login' %}">Sair</a>
+    </div>
+  </aside>
+
+  <main class="content-area">
+    <header class="section-header">
+      <h1>Olá, {{ request.user.first_name }}</h1>
+      <p>Veja o resumo do seu dia de hoje.</p>
+    </header>
+
+    {% if messages %}
+      <ul class="messages-list" style="list-style: none; padding: 0; margin-bottom: 20px;">
+        {% for message in messages %}
+          <li class="message-item {{ message.tags }}" style="padding: 10px; margin-bottom: 5px; border-radius: 4px; background-color: #fce8e6; color: #a51d24;">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="week-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 40px;">
+      <div class="day-card" style="cursor: default;">
+        <div class="day-name">Total do Dia</div>
+        <div class="day-number" style="color: var(--text-primary)">{{ totais.total|default:"0" }}</div>
+        <div class="day-month">Agendamentos</div>
+      </div>
+      <div class="day-card active" style="cursor: default;">
+        <div class="day-name">Pendentes</div>
+        <div class="day-number">{{ totais.pendentes|default:"0" }}</div>
+        <div class="day-month">Aguardando</div>
+      </div>
+      <div class="day-card" style="cursor: default; border-color: var(--success);">
+        <div class="day-name" style="color: var(--success);">Concluídos</div>
+        <div class="day-number" style="color: var(--success);">{{ totais.concluidos|default:"0" }}</div>
+        <div class="day-month">Finalizados</div>
+      </div>
+    </div>
+
+    <h2 class="selected-day-title">Próximos Agendamentos (Pendentes)</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Horário</th>
+            <th>Procedimento</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in agendamentos_pendentes %}
+          <tr>
+            <td>{{ item.cliente.nome }}</td>
+            <td>{{ item.data_hora|time:"H:i" }}</td>
+            <td>{{ item.procedimento.nome }}</td>
+            <td>
+              <form method="POST" action="{% url 'concluir_agendamento' %}" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="idagenda" value="{{ item.idagenda }}">
+                <button type="submit" class="btn btn-success" style="padding: 5px 10px; font-size: 0.75rem;">Concluir</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum agendamento pendente para hoje.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'script.js' %}"></script>
+</body>
+</html>

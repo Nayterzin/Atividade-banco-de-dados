@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Perfil Profissional — Beleza de Salão</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+</head>
+<body>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="logo-space">
+      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+    </div>
+    <nav>
+      <p class="sidebar-label">Navegação</p>
+      <ul>
+        <li><a href="{% url 'home_profissional' %}">Início</a></li>
+        <li><a href="{% url 'historico_profissional' %}">Histórico</a></li>
+        <li><a href="{% url 'perfil_profissional' %}" class="active">Meu Perfil</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'login' %}">Sair</a>
+    </div>
+  </aside>
+
+  <main class="content-area">
+    <header class="section-header">
+      <h1>Perfil Profissional</h1>
+      <p>Gerencie suas informações de exibição no salão.</p>
+    </header>
+
+    {% if messages %}
+      <ul class="messages-list" style="list-style: none; padding: 0; margin-bottom: 20px;">
+        {% for message in messages %}
+          <li class="message-item {{ message.tags }}" style="padding: 10px; margin-bottom: 5px; border-radius: 4px; background-color: #e6f4ea; color: #137333;">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if profissional %}
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">{{ profissional.nome|first|upper }}</div>
+        <div class="profile-header-info">
+          <h2>{{ profissional.nome }}</h2>
+          <p>{{ profissional.tipo|upper }}</p>
+        </div>
+      </div>
+
+      <div class="profile-fields">
+        <div class="profile-field">
+          <span class="field-label">Nome</span>
+          <span class="field-value">{{ profissional.nome }}</span>
+          <div class="field-edit-area"><small>—</small></div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">E-mail</span>
+          <span class="field-value" id="value-email">{{ profissional.email|default:"Não cadastrado" }}</span>
+          <div class="field-edit-area">
+            <form method="POST" action="{% url 'editar_perfil_profissional' %}" style="display: contents;">
+              {% csrf_token %}
+              <input type="hidden" name="campo" value="email" />
+              <input type="email" id="input-email" name="valor" class="inline-input" style="display:none;" value="{{ profissional.email }}">
+              <button type="submit" class="btn btn-success" id="save-email" style="display:none;">Salvar</button>
+            </form>
+            <button class="btn btn-ghost" data-edit-field="email">Editar</button>
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">CPF</span>
+          <span class="field-value">{{ profissional.cpf }}</span>
+          <div class="field-edit-area"><small>🔒</small></div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">Endereço</span>
+          <span class="field-value">{{ profissional.endereco|default:"Não informado" }}</span>
+          <div class="field-edit-area"><small>—</small></div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">Data de Nascimento</span>
+          <span class="field-value">{{ profissional.data_nascimento|date:"d/m/Y"|default:"Não informada" }}</span>
+          <div class="field-edit-area"><small>🔒</small></div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">Telefone</span>
+          <span class="field-value" id="value-tel">{{ profissional.telefone|default:"Não cadastrado" }}</span>
+          <div class="field-edit-area">
+            <form method="POST" action="{% url 'editar_perfil_profissional' %}" style="display: contents;">
+              {% csrf_token %}
+              <input type="hidden" name="campo" value="telefone" />
+              <input type="tel" id="input-tel" name="valor" class="inline-input" style="display:none;" value="{{ profissional.telefone }}">
+              <button type="submit" class="btn btn-success" id="save-tel" style="display:none;">Salvar</button>
+            </form>
+            <button class="btn btn-ghost" data-edit-field="tel">Editar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>Dados do profissional não encontrados.</p>
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<script src="{% static 'script.js' %}"></script>
+</body>
+</html>

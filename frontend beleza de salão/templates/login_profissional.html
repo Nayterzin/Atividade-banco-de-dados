@@ -4,40 +4,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Entrar — Beleza de Salão</title>
+  <title>Login Profissional — Beleza de Salão</title>
   <link rel="stylesheet" href="{% static 'style.css' %}" />
 </head>
 <body class="auth-page">
 
-  <a href="{% url 'login_profissional' %}" class="btn-switch-role">Entrar como Profissional</a>
-  
+  <a href="{% url 'login' %}" class="btn-switch-role">Entrar como Cliente</a>
+
   <div class="auth-card">
     <div class="logo-space">
       <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
     </div>
 
-    <h1 class="auth-title">Bem-vindo</h1>
-    <p class="auth-subtitle">Acesse sua conta para gerenciar seus agendamentos.</p>
+    <h1 class="auth-title">Área do Profissional</h1>
+    <p class="auth-subtitle">Insira sua matrícula/CPF e senha de acesso para gerenciar sua agenda.</p>
 
     {% if messages %}
-      <ul class="messages-list" aria-live="polite">
+      <ul class="messages-list" aria-live=\"polite\">
         {% for message in messages %}
           <li class="message-item {{ message.tags }}">{{ message }}</li>
         {% endfor %}
       </ul>
     {% endif %}
 
-    <form method="POST" action="{% url 'login' %}" novalidate>
+    <form method="POST" action="{% url 'login_profissional' %}" novalidate>
       {% csrf_token %}
 
       <div class="form-group">
-        <label for="usuario">CPF ou Usuário</label>
+        <label for="matricula">Matrícula ou CPF</label>
         <input
           type="text"
-          id="usuario"
-          name="usuario"
-          placeholder="000.000.000-00"
-          autocomplete="username"
+          id="matricula"
+          name="cpf"
+          placeholder="Ex: 000.000.000-00"
           required
           autofocus
         />
@@ -55,14 +54,10 @@
         />
       </div>
 
-      <button type="submit" class="btn btn-primary">
-        Entrar como Cliente
+      <button type="submit" class="btn btn-primary btn-profissional-submit">
+        Entrar como Profissional
       </button>
     </form>
-
-    <nav class="auth-links" aria-label="Links auxiliares">
-      <a href="{% url 'cadastro_c' %}">Criar uma conta</a>
-    </nav>
   </div>
 
 <script src="{% static 'script.js' %}"></script>

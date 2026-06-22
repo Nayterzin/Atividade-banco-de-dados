@@ -12,7 +12,6 @@
 <div class="dashboard">
 
   <aside class="sidebar" aria-label="Menu principal">
-
     <div class="logo-space">
       <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
     </div>
@@ -22,7 +21,7 @@
       <ul>
         <li>
           <a href="{% url 'calendario' %}">
-            <span class="nav-icon" aria-hidden="true"></span>
+            <span class="nav-icon" aria-hidden=\"true\"></span>
             Calendário
           </a>
         </li>
@@ -42,112 +41,52 @@
     </nav>
 
     <div class="sidebar-footer">
-      <a href="{% url 'login' %}" aria-label="Sair da conta">
-        <span class="nav-icon" aria-hidden="true"></span>
-        Sair
-      </a>
+      <a href="{% url 'login' %}" aria-label="Sair da conta">Sair</a>
     </div>
-
   </aside>
 
-
   <main class="content-area">
-
     <header class="section-header">
       <h1>Meu Perfil</h1>
-      <p>Visualize e edite seus dados cadastrais.</p>
+      <p>Gerencie suas informações de contato e preferências.</p>
     </header>
 
-
     {% if messages %}
-      <ul class="messages-list" aria-live="polite">
+      <ul class="messages-list" aria-live="polite" style="list-style: none; padding: 0; margin-bottom: 20px;">
         {% for message in messages %}
-          <li class="message-item {{ message.tags }}">{{ message }}</li>
+          <li class="message-item {{ message.tags }}" style="padding: 10px; margin-bottom: 5px; border-radius: 4px; background-color: #e6f4ea; color: #137333;">{{ message }}</li>
         {% endfor %}
       </ul>
     {% endif %}
 
     {% if cliente %}
-
       <div class="profile-card">
-
-        
         <div class="profile-header">
           <div class="profile-avatar" aria-hidden="true">
             {{ cliente.nome|first|upper }}
           </div>
           <div class="profile-header-info">
             <h2>{{ cliente.nome }}</h2>
-            <p>Cliente desde {{ cliente.idcliente|date:"Y" }}</p>
+            <p>Cliente</p>
           </div>
         </div>
 
         <div class="profile-fields">
 
-          
           <div class="profile-field">
-            <span class="field-label">Usuário&nbsp;(CPF)</span>
-            <span class="field-value" id="value-cpf">{{ cliente.cpf }}</span>
+            <span class="field-label">Nome Completo</span>
+            <span class="field-value">{{ cliente.nome }}</span>
             <div class="field-edit-area">
-              <span style="color:var(--text-secondary); font-size:0.8rem;">Não editável</span>
+              <small aria-hidden="true">—</small>
             </div>
           </div>
-
-          
-          <div class="profile-field">
-            <span class="field-label">Nome</span>
-            <span class="field-value" id="value-nome">{{ cliente.nome }}</span>
-            <div class="field-edit-area">
-
-
-              <form method="POST" action="{% url 'editar_perfil' %}" style="display:contents;">
-                {% csrf_token %}
-                <input type="hidden" name="campo" value="nome" />
-                <input
-                  type="text"
-                  id="input-nome"
-                  name="valor"
-                  class="inline-input"
-                  style="display:none;"
-                  autocomplete="name"
-                />
-                <button
-                  type="submit"
-                  id="save-nome"
-                  class="btn btn-success"
-                  style="display:none;"
-                  aria-label="Salvar nome"
-                >Salvar</button>
-              </form>
-
-              <button
-                type="button"
-                id="cancel-nome"
-                class="btn btn-ghost"
-                data-cancel-field="nome"
-                style="display:none;"
-                aria-label="Cancelar edição do nome"
-              >Cancelar</button>
-
-              <button
-                type="button"
-                class="btn btn-ghost"
-                data-edit-field="nome"
-                aria-label="Editar nome"
-              >Editar</button>
-
-            </div>
-          </div>
-
 
           <div class="profile-field">
             <span class="field-label">E-mail</span>
-            <span class="field-value" id="value-email">
-              {% if cliente.email %}{{ cliente.email }}{% else %}<em style="color:var(--text-secondary)">Não informado</em>{% endif %}
-            </span>
+            <span class="field-value" id="value-email">{{ cliente.email }}</span>
             <div class="field-edit-area">
-
-              <form method="POST" action="{% url 'editar_perfil' %}" style="display:contents;">
+              
+              <form method="POST" action="{% url 'editar_perfil' %}" style="display:none;" id="form-email">
                 {% csrf_token %}
                 <input type="hidden" name="campo" value="email" />
                 <input
@@ -155,46 +94,37 @@
                   id="input-email"
                   name="valor"
                   class="inline-input"
-                  style="display:none;"
+                  value="{{ cliente.email }}"
                   autocomplete="email"
+                  required
                 />
-                <button
-                  type="submit"
-                  id="save-email"
-                  class="btn btn-success"
-                  style="display:none;"
-                  aria-label="Salvar e-mail"
-                >Salvar</button>
+                <button type="submit" class="btn btn-success" style="padding: 5px 10px; font-size: 0.8rem;">Salvar</button>
               </form>
-
-              <button
-                type="button"
-                id="cancel-email"
-                class="btn btn-ghost"
-                data-cancel-field="email"
-                style="display:none;"
-                aria-label="Cancelar edição do e-mail"
-              >Cancelar</button>
 
               <button
                 type="button"
                 class="btn btn-ghost"
                 data-edit-field="email"
-                aria-label="Editar e-mail"
+                onclick="document.getElementById('value-email').style.display='none'; this.style.display='none'; document.getElementById('form-email').style.display='flex';"
               >Editar</button>
 
             </div>
           </div>
 
+          <div class="profile-field">
+            <span class="field-label">CPF</span>
+            <span class="field-value">{{ cliente.cpf }}</span>
+            <div class="field-edit-area">
+              <span class="lock-icon" title="Não é possível alterar o CPF diretamente" aria-label="Alteração bloqueada">🔒</span>
+            </div>
+          </div>
 
           <div class="profile-field">
             <span class="field-label">Telefone</span>
-            <span class="field-value" id="value-telefone">
-              {% if cliente.telefone %}{{ cliente.telefone }}{% else %}<em style="color:var(--text-secondary)">Não informado</em>{% endif %}
-            </span>
+            <span class="field-value" id="value-telefone">{{ cliente.telefone|default:"Não cadastrado" }}</span>
             <div class="field-edit-area">
 
-              <form method="POST" action="{% url 'editar_perfil' %}" style="display:contents;">
+              <form method="POST" action="{% url 'editar_perfil' %}" style="display:none;" id="form-telefone">
                 {% csrf_token %}
                 <input type="hidden" name="campo" value="telefone" />
                 <input
@@ -202,44 +132,26 @@
                   id="input-telefone"
                   name="valor"
                   class="inline-input"
-                  style="display:none;"
+                  value="{{ cliente.telefone|default:'' }}"
                   autocomplete="tel"
                   placeholder="(00) 00000-0000"
                 />
-                <button
-                  type="submit"
-                  id="save-telefone"
-                  class="btn btn-success"
-                  style="display:none;"
-                  aria-label="Salvar telefone"
-                >Salvar</button>
+                <button type="submit" class="btn btn-success" style="padding: 5px 10px; font-size: 0.8rem;">Salvar</button>
               </form>
-
-              <button
-                type="button"
-                id="cancel-telefone"
-                class="btn btn-ghost"
-                data-cancel-field="telefone"
-                style="display:none;"
-                aria-label="Cancelar edição do telefone"
-              >Cancelar</button>
 
               <button
                 type="button"
                 class="btn btn-ghost"
                 data-edit-field="telefone"
-                aria-label="Editar telefone"
+                onclick="document.getElementById('value-telefone').style.display='none'; this.style.display='none'; document.getElementById('form-telefone').style.display='flex';"
               >Editar</button>
 
             </div>
           </div>
 
         </div>
-
       </div>
-
     {% else %}
-
       <div class="empty-state">
         <div class="icon" aria-hidden="true">🔍</div>
         <p>Perfil não encontrado. Verifique seu cadastro.</p>
