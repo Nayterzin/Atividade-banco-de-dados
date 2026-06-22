@@ -1,22 +1,25 @@
-"""
-URL configuration for salao project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# salao/urls.py (ajustado)
 from django.contrib import admin
 from django.urls import path
+from salao_rosa import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.login_cliente, name='login'),  
+    path('login/', views.login_cliente, name='login'),
+    path('login_profissional/', views.login_funcionario, name='login_profissional'),  
+    path('cadastro/', views.cadastro_c, name='cadastro_c'),
+    path('calendario/', views.calendario, name='calendario'),
+    path('realizar_agendamento/', views.realizar_agendamento, name='realizar_agendamento'),
+    path('meus_agendamentos/', views.meus_agendamentos, name='meus_agendamentos'),
+    path('cancelar_agendamento/', views.cancelar_agendamento, name='cancelar_agendamento'),
+    path('perfil/', views.perfil, name='perfil'),
+    path('editar_perfil/', views.editar_perfil, name='editar_perfil'),
+    path('home_profissional/', views.home_profissional, name='home_profissional'),
+    path('historico_profissional/', views.historico_profissional, name='historico_profissional'),
+    path('concluir_agendamento/', views.concluir_agendamento, name='concluir_agendamento'),
+    path('perfil_profissional/', views.perfil_profissional, name='perfil_profissional'),
+    path('editar_perfil_profissional/', views.editar_perfil_profissional, name='editar_perfil_profissional'),
+    path('preco_procedimento/', views.preco_procedimento, name='preco_procedimento'),
+    path('cadastro_funcionario/', views.cadastro_funcionario, name='cadastro_funcionario'),
 ]

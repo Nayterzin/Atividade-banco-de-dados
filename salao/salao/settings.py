@@ -91,12 +91,12 @@ WSGI_APPLICATION = 'salao.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.environ.get('DB_NAME', 'salao'),
-        'USER': os.environ.get('DB_USER', 'israel'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', ''),
-        'PORT': os.environ.get('DB_PORT', ''),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'salao',
+        'USER': 'analu',
+        'PASSWORD': 'Lurss1922',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -123,13 +123,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = 'America/Fortaleza'   
 USE_I18N = True
-
-USE_TZ = True
+USE_TZ = False   
 
 
 # Static files (CSS, JavaScript, Images)
