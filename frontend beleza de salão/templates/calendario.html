@@ -1,152 +1,263 @@
 {% load static %}
 <!doctype html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calendário — Beleza de Salão</title>
     <link rel="stylesheet" href="{% static 'style.css' %}" />
-</head>
-<body>
+  </head>
+  <body>
     <div class="dashboard">
-        <aside class="sidebar" aria-label="Menu principal">
-            <div class="logo-space">
-                <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
-            </div>
-            <nav aria-label="Navegação do salão">
-                <p class="sidebar-label">Menu</p>
-                <ul>
-                    <li><a href="{% url 'calendario' %}" class="active" aria-current="page">Calendário</a></li>
-                    <li><a href="{% url 'meus_agendamentos' %}">Meus Agendamentos</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="{% url 'login' %}">Sair</a>
-            </div>
-        </aside>
-        <main class="content-area">
-            <header class="section-header">
-                <h1>Escolha uma Data</h1>
-                <p>Selecione o melhor dia e horário para o seu atendimento.</p>
-            </header>
-            {% if messages %}
-            <ul class="messages-list">
-                {% for message in messages %}
-                <li class="message-item {{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-            <div class="calendar-wrapper" style="background:#fff; padding:20px; border-radius:8px; border:1px solid var(--border-color);">
-                <p style="text-align:center; color:var(--text-secondary);">Selecione um horário diretamente abrindo o painel de agendamentos.</p>
-                <div style="text-align:center; margin-top:15px;">
-                    <button class="btn btn-primary" onclick="abrirModal()" style="width:auto;">Agendar Serviço</button>
-                </div>
-            </div>
-        </main>
-    </div>
-    <div id="modalAgendamento" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:1000;">
-        <div class="modal-content" style="background:#fff; padding:30px; border-radius:12px; max-width:500px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-            <h2 style="margin-bottom:20px; color:var(--text-primary);">Realizar Agendamento</h2>
-            <form method="POST" action="{% url 'realizar_agendamento' %}">
-                {% csrf_token %}
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label for="data_hora">Data e Horário</label>
-                    <input type="datetime-local" id="data_hora" name="data_hora" required style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color);" />
-                </div>
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label for="procedimento">Procedimento</label>
-                    <select id="procedimento" name="procedimento" required style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color);">
-                        <option value="" disabled selected>Selecione um serviço…</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:20px;">
-                    <label for="funcionario">Profissional</label>
-                    <select id="funcionario" name="funcionario" required style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color);">
-                        <option value="" disabled selected>Selecione uma profissional…</option>
-                    </select>
-                </div>
-                <input type="hidden" name="cliente" value="{{ request.user.username }}" />
-                <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-                    <button type="button" class="btn btn-outline" onclick="fecharModal()" style="width:auto;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width:auto;">Confirmar</button>
-                </div>
-            </form>
+      <aside class="sidebar" aria-label="Menu principal">
+        <div class="logo-space">
+          <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
         </div>
+        <nav aria-label="Navegação do salão">
+          <p class="sidebar-label">Menu</p>
+          <ul>
+            <li>
+              <a
+                href="{% url 'calendario' %}"
+                class="active"
+                aria-current="page"
+                >Calendário</a
+              >
+            </li>
+            <li>
+              <a href="{% url 'meus_agendamentos' %}">Meus Agendamentos</a>
+            </li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <a href="{% url 'login' %}">Sair</a>
+        </div>
+      </aside>
+      <main class="content-area">
+        <header class="section-header">
+          <h1>Escolha uma Data</h1>
+          <p>Selecione o melhor dia e horário para o seu atendimento.</p>
+        </header>
+        {% if messages %}
+        <ul class="messages-list">
+          {% for message in messages %}
+          <li class="message-item {{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <div
+          class="calendar-wrapper"
+          style="
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+          "
+        >
+          <p style="text-align: center; color: var(--text-secondary)">
+            Selecione um horário diretamente abrindo o painel de agendamentos.
+          </p>
+          <div style="text-align: center; margin-top: 15px">
+            <button
+              class="btn btn-primary"
+              onclick="abrirModal()"
+              style="width: auto"
+            >
+              Agendar Serviço
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div
+      id="modalAgendamento"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      "
+    >
+      <div
+        class="modal-content"
+        style="
+          background: #fff;
+          padding: 30px;
+          border-radius: 12px;
+          max-width: 500px;
+          width: 90%;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        "
+      >
+        <h2 style="margin-bottom: 20px; color: var(--text-primary)">
+          Realizar Agendamento
+        </h2>
+        <form method="POST" action="{% url 'realizar_agendamento' %}">
+          {% csrf_token %}
+          <div class="form-group" style="margin-bottom: 15px">
+            <label for="data_hora">Data e Horário</label>
+            <input
+              type="datetime-local"
+              id="data_hora"
+              name="data_hora"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+              "
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 15px">
+            <label for="procedimento">Procedimento</label>
+            <select
+              id="procedimento"
+              name="procedimento"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+              "
+            >
+              <option value="" disabled selected>Selecione um serviço…</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 20px">
+            <label for="funcionario">Profissional</label>
+            <select
+              id="funcionario"
+              name="funcionario"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+              "
+            >
+              <option value="" disabled selected>
+                Selecione uma profissional…
+              </option>
+            </select>
+          </div>
+          <input
+            type="hidden"
+            name="cliente"
+            value="{{ request.user.username }}"
+          />
+          <div
+            class="modal-actions"
+            style="display: flex; justify-content: flex-end; gap: 10px"
+          >
+            <button
+              type="button"
+              class="btn btn-outline"
+              onclick="fecharModal()"
+              style="width: auto"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" style="width: auto">
+              Confirmar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
     <script>
-        const procedimentos = JSON.parse('{{ procedimentos_json|escapejs }}');
-        const funcionarios = JSON.parse('{{ funcionarios_json|escapejs }}');
-        const procedimentoTipos = {};
-        procedimentos.forEach(function(p) {
-            procedimentoTipos[p.id] = p.tipos;
+      const procedimentos = JSON.parse("{{ procedimentos_json|escapejs }}");
+      const funcionarios = JSON.parse("{{ funcionarios_json|escapejs }}");
+      const procedimentoTipos = {};
+      procedimentos.forEach(function (p) {
+        procedimentoTipos[p.id] = p.tipos;
+      });
+      function preencherProcedimentos() {
+        const sel = document.getElementById("procedimento");
+        sel.innerHTML =
+          '<option value="" disabled selected>Selecione um serviço…</option>';
+        procedimentos.forEach(function (p) {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = p.nome;
+          sel.appendChild(opt);
         });
-        function preencherProcedimentos() {
-            const sel = document.getElementById('procedimento');
-            sel.innerHTML = '<option value="" disabled selected>Selecione um serviço…</option>';
-            procedimentos.forEach(function(p) {
-                const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.textContent = p.nome;
-                sel.appendChild(opt);
-            });
+      }
+      function filtrarProfissionais() {
+        const procSelect = document.getElementById("procedimento");
+        const funcSelect = document.getElementById("funcionario");
+        const procId = parseInt(procSelect.value, 10);
+        const tiposPermitidos = procedimentoTipos[procId] || [];
+        funcSelect.innerHTML =
+          '<option value="" disabled selected>Selecione uma profissional…</option>';
+        funcionarios.forEach(function (f) {
+          if (tiposPermitidos.includes(f.tipo)) {
+            const opt = document.createElement("option");
+            opt.value = f.id;
+            opt.textContent = f.nome;
+            funcSelect.appendChild(opt);
+          }
+        });
+        if (funcSelect.options.length === 1) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.disabled = true;
+          opt.textContent = "Nenhum profissional disponível para este serviço";
+          funcSelect.appendChild(opt);
         }
-        function filtrarProfissionais() {
-            const procSelect = document.getElementById('procedimento');
-            const funcSelect = document.getElementById('funcionario');
-            const procId = parseInt(procSelect.value, 10);
-            const tiposPermitidos = procedimentoTipos[procId] || [];
-            funcSelect.innerHTML = '<option value="" disabled selected>Selecione uma profissional…</option>';
-            funcionarios.forEach(function(f) {
-                if (tiposPermitidos.includes(f.tipo)) {
-                    const opt = document.createElement('option');
-                    opt.value = f.id;
-                    opt.textContent = f.nome;
-                    funcSelect.appendChild(opt);
-                }
-            });
-            if (funcSelect.options.length === 1) {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.disabled = true;
-                opt.textContent = 'Nenhum profissional disponível para este serviço';
-                funcSelect.appendChild(opt);
-            }
-        }
-        function abrirModal() {
-            document.getElementById('modalAgendamento').style.display = 'flex';
-            const agora = new Date();
-            const ano = agora.getFullYear();
-            const mes = String(agora.getMonth() + 1).padStart(2, '0');
-            const dia = String(agora.getDate()).padStart(2, '0');
-            let hora = agora.getHours() + 1;
-            if (hora < 8) hora = 8;
-            if (hora >= 20) {
-                hora = 8;
-                const amanha = new Date(agora.getTime() + 86400000);
-                const ano2 = amanha.getFullYear();
-                const mes2 = String(amanha.getMonth() + 1).padStart(2, '0');
-                const dia2 = String(amanha.getDate()).padStart(2, '0');
-                const dh2 = document.getElementById('data_hora');
-                dh2.value = ano2 + '-' + mes2 + '-' + dia2 + 'T' + String(hora).padStart(2, '0') + ':00';
-                dh2.min = dh2.value;
-                dh2.max = ano2 + '-' + mes2 + '-' + dia2 + 'T19:59';
-                filtrarProfissionais();
-                return;
-            }
-            const horaStr = String(hora).padStart(2, '0');
-            const dh = document.getElementById('data_hora');
-            dh.value = ano + '-' + mes + '-' + dia + 'T' + horaStr + ':00';
-            dh.min = dh.value;
-            dh.max = ano + '-' + mes + '-' + dia + 'T19:59';
+      }
+      function abrirModal() {
+        document.getElementById("modalAgendamento").style.display = "flex";
+
+        const agora = new Date();
+        const ano = agora.getFullYear();
+        const mes = String(agora.getMonth() + 1).padStart(2, "0");
+        const dia = String(agora.getDate()).padStart(2, "0");
+
+        let hora = 10;
+        let minutos = "00";
+
+        if (agora.getHours() >= 10) {
+          hora = agora.getHours() + 1;
+          if (hora >= 20) {
+            const amanha = new Date(agora.getTime() + 86400000);
+            const ano2 = amanha.getFullYear();
+            const mes2 = String(amanha.getMonth() + 1).padStart(2, "0");
+            const dia2 = String(amanha.getDate()).padStart(2, "0");
+            const dh = document.getElementById("data_hora");
+            dh.value = ano2 + "-" + mes2 + "-" + dia2 + "T08:00";
+            dh.min = ano2 + "-" + mes2 + "-" + dia2 + "T08:00";
+            dh.max = ano2 + "-" + mes2 + "-" + dia2 + "T19:59";
             filtrarProfissionais();
+            return;
+          }
         }
-        function fecharModal() {
-            document.getElementById('modalAgendamento').style.display = 'none';
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            preencherProcedimentos();
-            document.getElementById('procedimento').addEventListener('change', filtrarProfissionais);
-        });
+
+        const dh = document.getElementById("data_hora");
+        const horaStr = String(hora).padStart(2, "0");
+        dh.value = ano + "-" + mes + "-" + dia + "T" + horaStr + ":" + minutos;
+        dh.min = ano + "-" + mes + "-" + dia + "T08:00";
+        dh.max = ano + "-" + mes + "-" + dia + "T19:59";
+        filtrarProfissionais();
+      }
+      function fecharModal() {
+        document.getElementById("modalAgendamento").style.display = "none";
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        preencherProcedimentos();
+        document
+          .getElementById("procedimento")
+          .addEventListener("change", filtrarProfissionais);
+      });
     </script>
-</body>
+  </body>
 </html>

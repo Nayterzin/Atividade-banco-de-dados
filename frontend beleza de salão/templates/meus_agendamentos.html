@@ -1,60 +1,59 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meus Agendamentos — Beleza de Salão</title>
-  <link rel="stylesheet" href="{% static 'style.css' %}" />
-</head>
-<body>
-
-<div class="dashboard">
-  <aside class="sidebar" aria-label="Menu principal">
-    <div class="logo-space">
-      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
-    </div>
-    <nav aria-label="Navegação do salão">
-      <p class="sidebar-label">Menu</p>
-      <ul>
-        <li><a href="{% url 'calendario' %}">Calendário</a></li>
-        <li><a href="{% url 'meus_agendamentos' %}" class="active">Meus Agendamentos</a></li>
-      </ul>
-    </nav>
-    <div class="sidebar-footer">
-      <a href="{% url 'login' %}">Sair</a>
-    </div>
-  </aside>
-
-  <main class="content-area">
-    <header class="section-header">
-      <h1>Meus Agendamentos</h1>
-      <p>Consulte seu histórico ou cancele compromissos pendentes.</p>
-    </header>
-
-    {% if messages %}
-      <ul class="messages-list">
-        {% for message in messages %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meus Agendamentos — Beleza de Salão</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <aside class="sidebar" aria-label="Menu principal">
+        <div class="logo-space">
+          <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+        </div>
+        <nav aria-label="Navegação do salão">
+          <p class="sidebar-label">Menu</p>
+          <ul>
+            <li><a href="{% url 'calendario' %}">Calendário</a></li>
+            <li>
+              <a href="{% url 'meus_agendamentos' %}" class="active"
+                >Meus Agendamentos</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <a href="{% url 'login' %}">Sair</a>
+        </div>
+      </aside>
+      <main class="content-area">
+        <header class="section-header">
+          <h1>Meus Agendamentos</h1>
+          <p>Consulte seu histórico ou cancele compromissos pendentes.</p>
+        </header>
+        {% if messages %}
+        <ul class="messages-list">
+          {% for message in messages %}
           <li class="message-item {{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
-    {% if agenda %}
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Horário</th>
-              <th>Procedimento</th>
-              <th>Profissional</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in agenda %}
+          {% endfor %}
+        </ul>
+        {% endif %} {% if agenda %}
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Procedimento</th>
+                <th>Profissional</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in agenda %}
               <tr>
                 <td>{{ item.data_hora|date:"d/m/Y" }}</td>
                 <td>{{ item.data_hora|time:"H:i" }}</td>
@@ -67,40 +66,57 @@
                 </td>
                 <td>
                   {% if item.status == 'agendado' %}
-                    <form method="POST" action="{% url 'cancelar_agendamento' %}" style="display:inline;">
-                      {% csrf_token %}
-                      <input type="hidden" name="idagenda" value="{{ item.idagenda }}" />
-                      <button
-                        type="submit"
-                        class="btn btn-danger"
-                        onclick="return confirm('Confirma o cancelamento?')"
-                        style="font-size:0.78rem; padding:5px 10px;"
-                      >Cancelar</button>
-                    </form>
+                  <form
+                    method="POST"
+                    action="{% url 'cancelar_agendamento' %}"
+                    style="display: inline"
+                  >
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="idagenda"
+                      value="{{ item.idagenda }}"
+                    />
+                    <button
+                      type="submit"
+                      class="btn btn-danger"
+                      onclick="return confirm('Confirma o cancelamento?');"
+                      style="font-size: 0.78rem; padding: 5px 10px"
+                    >
+                      Cancelar
+                    </button>
+                  </form>
                   {% elif item.status == 'concluido' %}
-                    <a
-                      href="{% url 'preco_procedimento' %}?idagenda={{ item.idagenda }}"
-                      class="btn btn-ghost"
-                      style="font-size:0.78rem; padding:5px 10px;"
-                    >Ver Recibo</a>
+                  <a
+                    href="{% url 'preco_procedimento' %}?idagenda={{ item.idagenda }}"
+                    class="btn btn-ghost"
+                    style="font-size: 0.78rem; padding: 5px 10px"
+                    >Ver Recibo</a
+                  >
                   {% else %}
-                    <span style="color:var(--text-secondary); font-size:0.82rem;">—</span>
+                  <span style="color: var(--text-secondary); font-size: 0.82rem"
+                    >—</span
+                  >
                   {% endif %}
                 </td>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <div class="empty-state">
-        <p>Nenhum agendamento encontrado.</p>
-        <a href="{% url 'calendario' %}" class="btn btn-primary" style="width:auto; margin-top:16px;">Agendar agora</a>
-      </div>
-    {% endif %}
-  </main>
-</div>
-
-<script src="{% static 'script.js' %}"></script>
-</body>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p>Nenhum agendamento encontrado.</p>
+          <a
+            href="{% url 'calendario' %}"
+            class="btn btn-primary"
+            style="width: auto; margin-top: 16px"
+            >Agendar agora</a
+          >
+        </div>
+        {% endif %}
+      </main>
+    </div>
+    <script src="{% static 'script.js' %}"></script>
+  </body>
 </html>

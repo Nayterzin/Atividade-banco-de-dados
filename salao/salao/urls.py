@@ -1,13 +1,12 @@
-# salao/urls.py (ajustado)
 from django.contrib import admin
 from django.urls import path
 from salao_rosa import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.login_cliente, name='login'),  
+    path('', views.login_cliente, name='login'),
     path('login/', views.login_cliente, name='login'),
-    path('login_profissional/', views.login_funcionario, name='login_profissional'),  
+    path('login_profissional/', views.login_funcionario, name='login_profissional'),
     path('cadastro/', views.cadastro_c, name='cadastro_c'),
     path('calendario/', views.calendario, name='calendario'),
     path('realizar_agendamento/', views.realizar_agendamento, name='realizar_agendamento'),

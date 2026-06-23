@@ -1,76 +1,84 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Histórico de Atendimentos — Beleza de Salão</title>
-  <link rel="stylesheet" href="{% static 'style.css' %}" />
-</head>
-<body>
-
-<div class="dashboard">
-  <aside class="sidebar">
-    <div class="logo-space">
-      <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Histórico de Atendimentos — Beleza de Salão</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <aside class="sidebar">
+        <div class="logo-space">
+          <img src="{% static 'logorosa.png' %}" alt="Beleza de Salão" />
+        </div>
+        <nav>
+          <p class="sidebar-label">Navegação</p>
+          <ul>
+            <li><a href="{% url 'home_profissional' %}">Início</a></li>
+            <li>
+              <a href="{% url 'historico_profissional' %}" class="active"
+                >Histórico</a
+              >
+            </li>
+            <li><a href="{% url 'perfil_profissional' %}">Meu Perfil</a></li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <a href="{% url 'login' %}">Sair</a>
+        </div>
+      </aside>
+      <main class="content-area">
+        <header class="section-header">
+          <h1>Histórico</h1>
+          <p>Todos os seus atendimentos registrados.</p>
+        </header>
+        <div style="margin-bottom: 40px">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Cliente</th>
+                  <th>Horário</th>
+                  <th>Procedimento</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in historico %}
+                <tr>
+                  <td>{{ item.data_hora|date:"d/m/Y" }}</td>
+                  <td>{{ item.cliente.nome }}</td>
+                  <td>{{ item.data_hora|time:"H:i" }}</td>
+                  <td>{{ item.procedimento.nome }}</td>
+                  <td>
+                    <span class="badge badge-{{ item.status }}">
+                      {{ item.status|upper }}
+                    </span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td
+                    colspan="5"
+                    style="
+                      text-align: center;
+                      color: var(--text-secondary);
+                      padding: 20px;
+                    "
+                  >
+                    Nenhum atendimento registrado no histórico.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
     </div>
-    <nav>
-      <p class="sidebar-label">Navegação</p>
-      <ul>
-        <li><a href="{% url 'home_profissional' %}">Início</a></li>
-        <li><a href="{% url 'historico_profissional' %}" class="active">Histórico</a></li>
-        <li><a href="{% url 'perfil_profissional' %}">Meu Perfil</a></li>
-      </ul>
-    </nav>
-    <div class="sidebar-footer">
-      <a href="{% url 'login' %}">Sair</a>
-    </div>
-  </aside>
-
-  <main class="content-area">
-    <header class="section-header">
-      <h1>Histórico</h1>
-      <p>Todos os seus atendimentos registrados.</p>
-    </header>
-
-    <div style="margin-bottom: 40px;">
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Horário</th>
-              <th>Procedimento</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in historico %}
-            <tr>
-              <td>{{ item.data_hora|date:"d/m/Y" }}</td>
-              <td>{{ item.cliente.nome }}</td>
-              <td>{{ item.data_hora|time:"H:i" }}</td>
-              <td>{{ item.procedimento.nome }}</td>
-              <td>
-                <span class="badge badge-{{ item.status }}">
-                  {{ item.status|upper }}
-                </span>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum atendimento registrado no histórico.</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<script src="{% static 'script.js' %}"></script>
-</body>
+    <script src="{% static 'script.js' %}"></script>
+  </body>
 </html>

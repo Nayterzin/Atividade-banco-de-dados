@@ -1,4 +1,3 @@
-# salao_rosa/views.py
 from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -11,9 +10,6 @@ from .models import (
     Funcionario, Cliente, Agenda, Procedimento,
     StatusAgendamento, TipoFuncionario
 )
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Procedimento, Funcionario
 import json
 
 @login_required
@@ -105,8 +101,6 @@ def login_funcionario(request):
         return redirect('home_profissional')
     return render(request, 'login_profissional.html')
 
-
-
 @login_required
 def realizar_agendamento(request):
     if request.method == 'POST':
@@ -191,14 +185,18 @@ def home_profissional(request):
     if not funcionario:
         messages.error(request, "Profissional não encontrado.")
         return redirect('login')
-    hoje = date.today()
-    agendamentos_hoje = Agenda.objects.filter(funcionario=funcionario, data_hora__date=hoje)
+
+    pendentes = Agenda.objects.filter(
+        funcionario=funcionario,
+        status__in=[StatusAgendamento.AGENDADO, StatusAgendamento.CONFIRMADO]
+    ).order_by('data_hora')
+
     totais = {
-        'total': agendamentos_hoje.count(),
-        'pendentes': agendamentos_hoje.filter(status=StatusAgendamento.AGENDADO).count(),
-        'concluidos': agendamentos_hoje.filter(status=StatusAgendamento.CONCLUIDO).count()
+        'total': pendentes.count(),
+        'pendentes': pendentes.filter(status=StatusAgendamento.AGENDADO).count(),
+        'concluidos': Agenda.objects.filter(funcionario=funcionario, status=StatusAgendamento.CONCLUIDO).count()
     }
-    pendentes = agendamentos_hoje.filter(status=StatusAgendamento.AGENDADO).order_by('data_hora')
+
     return render(request, 'home_profissional.html', {
         'totais': totais,
         'agendamentos_pendentes': pendentes

@@ -1,4 +1,3 @@
-# salao_rosa/models.py
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator, EmailValidator
 from django.core.exceptions import ValidationError
